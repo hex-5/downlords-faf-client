@@ -101,6 +101,8 @@ public class FafClientApplication extends Application {
   public void start(Stage stage) {
     StageHolder.setStage(stage);
     stage.initStyle(StageStyle.UNDECORATED);
+    stage.setMinWidth(640);
+    stage.setMinHeight(480);
     showMainWindow();
     JavaFxUtil.fixJDK8089296();
 
@@ -117,6 +119,8 @@ public class FafClientApplication extends Application {
 
   private void showMainWindow() {
     MainController controller = applicationContext.getBean(UiService.class).loadFxml("theme/main.fxml");
+    controller.getRoot().setMinWidth(640);
+    controller.getRoot().setMinHeight(480);
     controller.display();
   }
 

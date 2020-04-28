@@ -10,6 +10,7 @@ import com.faforever.client.fa.relay.HostGameMessage;
 import com.faforever.client.fa.relay.JoinGameMessage;
 import com.faforever.client.fa.relay.LobbyMode;
 import com.faforever.client.fa.relay.event.GameFullEvent;
+import com.faforever.client.patch.event.FileOverriddenEvent;
 import com.faforever.client.fa.relay.event.RehostRequestEvent;
 import com.faforever.client.fa.relay.ice.event.GpgGameMessageEvent;
 import com.faforever.client.fa.relay.ice.event.IceAdapterStateChanged;
