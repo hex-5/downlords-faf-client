@@ -106,7 +106,7 @@ public class FafClientApplication extends Application {
     showMainWindow();
     JavaFxUtil.fixJDK8089296();
 
-    // TODO publish event instead
+// TODO publish event instead
     if (!applicationContext.getBeansOfType(WindowsTaskbarProgressUpdater.class).isEmpty()) {
       applicationContext.getBean(WindowsTaskbarProgressUpdater.class).initTaskBar();
     }
@@ -117,6 +117,10 @@ public class FafClientApplication extends Application {
     return new PlatformService(getHostServices());
   }
 
+  private void showMainWindow() {
+    MainController controller = applicationContext.getBean(UiService.class).loadFxml("theme/main.fxml");
+    controller.getRoot().setMinWidth(640);
+    controller.getRoot().setMinHeight(480);
   private void showMainWindow() {
     MainController controller = applicationContext.getBean(UiService.class).loadFxml("theme/main.fxml");
     controller.getRoot().setMinWidth(640);
