@@ -421,10 +421,13 @@
 }
 
 .number-button:selected {
-  -fx-text-fill: -fx-accent;
-  -fx-underline: true;
+  -fx-background-color: -card-color;
+  -fx-border-color: -fx-accent;
 }
 
+.number-button:hover {
+  -fx-border-color: -dimmed-accent;
+}
 /***************** Icon *****************/
 
 .icon, .icon .text {
@@ -960,6 +963,11 @@
 .game-title-input {
   -fx-font-size: 0.8cm;
 }
+
+.game-title-input:invalid {
+  -fx-border-color: -bad;
+}
+
 .game-generate-map {
   -fx-background-color: -dimmed-accent;
   -fx-graphic-text-gap: 0.7em;
