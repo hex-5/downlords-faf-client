@@ -121,10 +121,6 @@ public class FafClientApplication extends Application {
     MainController controller = applicationContext.getBean(UiService.class).loadFxml("theme/main.fxml");
     controller.getRoot().setMinWidth(640);
     controller.getRoot().setMinHeight(480);
-  private void showMainWindow() {
-    MainController controller = applicationContext.getBean(UiService.class).loadFxml("theme/main.fxml");
-    controller.getRoot().setMinWidth(640);
-    controller.getRoot().setMinHeight(480);
     controller.display();
   }
 
