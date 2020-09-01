@@ -3,12 +3,18 @@ package com.faforever.client.patch;
 import com.faforever.client.api.dto.FeaturedModFile;
 import com.faforever.client.i18n.I18n;
 import com.faforever.client.io.DownloadService;
+import com.faforever.client.map.MapService.PreviewSize;
 import com.faforever.client.mod.FeaturedMod;
+import com.faforever.client.notification.NotificationService;
+import com.faforever.client.notification.TransientNotification;
+import com.faforever.client.patch.event.FileOverriddenEvent;
 import com.faforever.client.preferences.PreferencesService;
 import com.faforever.client.remote.FafService;
 import com.faforever.client.task.CompletableTask;
 import com.faforever.client.util.UpdaterUtil;
+import com.google.common.eventbus.EventBus;
 import com.google.common.hash.Hashing;
+import javafx.scene.control.Alert;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +23,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Component
@@ -36,14 +44,16 @@ public class SimpleHttpFeaturedModUpdaterTask extends CompletableTask<PatchResul
 
   private FeaturedMod featuredMod;
   private Integer version;
+  private final EventBus eventBus;
 
-  public SimpleHttpFeaturedModUpdaterTask(FafService fafService, PreferencesService preferencesService, DownloadService downloadService, I18n i18n) {
+  public SimpleHttpFeaturedModUpdaterTask(FafService fafService, PreferencesService preferencesService, DownloadService downloadService, I18n i18n, EventBus eventBus) {
     super(Priority.HIGH);
 
     this.fafService = fafService;
     this.preferencesService = preferencesService;
     this.downloadService = downloadService;
     this.i18n = i18n;
+    this.eventBus = eventBus;
   }
 
   @Override
@@ -62,16 +72,40 @@ public class SimpleHttpFeaturedModUpdaterTask extends CompletableTask<PatchResul
           .resolve(featuredModFile.getGroup())
           .resolve(featuredModFile.getName());
 
-      if (Files.exists(targetPath)
-          && featuredModFile.getMd5().equals(com.google.common.io.Files.hash(targetPath.toFile(), Hashing.md5()).toString())) {
-        logger.debug("Already up to date: {}", targetPath);
-      } else {
-        Files.createDirectories(targetPath.getParent());
-        updateMessage(i18n.get("updater.downloadingFile", targetPath.getFileName()));
+      String sMd5 = "";
+      String sMd5Server = featuredModFile.getMd5();
 
-        String url = featuredModFile.getUrl();
-        downloadService.downloadFile(new URL(url), targetPath, this::updateProgress);
-        UpdaterUtil.extractMoviesIfPresent(targetPath, fafDataDirectory);
+      if(Files.exists(targetPath))
+      {
+        sMd5 = com.google.common.io.Files.hash(targetPath.toFile(), Hashing.md5()).toString();
+        //check fails anyways if md5 is empty
+        if(sMd5Server.equals(sMd5))
+        {
+          logger.debug("Already up to date: {}", targetPath);
+        }
+        else
+        {
+          logger.debug("Maybe not up to date or modified: {}", targetPath);
+          logger.debug("Please consider to check this file by yourself: {}", targetPath);
+          updateMessage("files go brrrrrrrrrrrrrrr!");
+          Path targetPathOriginal = fafDataDirectory
+              .resolve(featuredModFile.getGroup())
+              .resolve(featuredModFile.getName()+".original");
+          if(Files.exists(targetPathOriginal))
+          {
+            String sMd5Original = com.google.common.io.Files.hash(targetPathOriginal.toFile(), Hashing.md5()).toString();
+            if(!sMd5Original.equals(sMd5Server))
+            {
+              downloadUpdateFile(featuredModFile, fafDataDirectory, targetPath);
+
+              eventBus.post(new FileOverriddenEvent(featuredModFile));
+            }
+          }
+        }
+      }
+      else
+      {
+        downloadUpdateFile(featuredModFile, fafDataDirectory, targetPath);
       }
 
 
@@ -88,6 +122,15 @@ public class SimpleHttpFeaturedModUpdaterTask extends CompletableTask<PatchResul
         .orElseThrow(() -> new IllegalStateException("No version found"));
 
     return PatchResult.withLegacyInitFile(new ComparableVersion(String.valueOf(maxVersion)), initFile);
+  }
+
+  private void downloadUpdateFile(FeaturedModFile featuredModFile, Path fafDataDirectory, Path targetPath) throws IOException {
+    Files.createDirectories(targetPath.getParent());
+    updateMessage(i18n.get("updater.downloadingFile", targetPath.getFileName()));
+
+    String url = featuredModFile.getUrl();
+    downloadService.downloadFile(new URL(url), targetPath, this::updateProgress);
+    UpdaterUtil.extractMoviesIfPresent(targetPath, fafDataDirectory);
   }
 
   public void setFeaturedMod(FeaturedMod featuredMod) {
