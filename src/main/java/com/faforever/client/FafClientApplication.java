@@ -1,5 +1,6 @@
 package com.faforever.client;
 
+import ch.micheljung.fxwindow.FxStage;
 import com.faforever.client.config.ClientProperties;
 import com.faforever.client.fx.JavaFxUtil;
 import com.faforever.client.fx.PlatformService;
@@ -17,7 +18,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.Banner.Mode;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -100,6 +100,11 @@ public class FafClientApplication extends Application {
   @Override
   public void start(Stage stage) {
     StageHolder.setStage(stage);
+    FxStage fxStage = FxStage.configure(stage)
+        .withSceneFactory(parent -> applicationContext.getBean(UiService.class).createScene(parent))
+        .apply();
+
+    showMainWindow(fxStage);
     stage.initStyle(StageStyle.UNDECORATED);
     stage.setMinWidth(640);
     stage.setMinHeight(480);
@@ -116,15 +121,7 @@ public class FafClientApplication extends Application {
     return new PlatformService(getHostServices());
   }
 
-<<<<<<< Updated upstream
-=======
-  private void showMainWindow(FxStage fxStage) {
-    UiService uiService = applicationContext.getBean(UiService.class);
-
-    MainController controller = uiService.loadFxml("theme/main.fxml");
-    controller.setFxStage(fxStage);
->>>>>>> Stashed changes
-  private void showMainWindow() {
+private void showMainWindow() {
     MainController controller = applicationContext.getBean(UiService.class).loadFxml("theme/main.fxml");
     controller.getRoot().setMinWidth(640);
     controller.getRoot().setMinHeight(480);
@@ -138,7 +135,7 @@ public class FafClientApplication extends Application {
 
     Thread timeoutThread = new Thread(() -> {
       try {
-        Thread.sleep(Duration.ofSeconds(30).toMillis());
+        Thread.sleep(Duration.ofSeconds(10).toMillis());
       } catch (InterruptedException e) {
       }
 

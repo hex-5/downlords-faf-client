@@ -1,1 +1,1 @@
-gradlew --stacktrace -Pversion="1.1.6-modable" -PjavafxPlatform=win jar
+gradlew --stacktrace -Pversion="1.2.0" -PjavafxPlatform=win jar
